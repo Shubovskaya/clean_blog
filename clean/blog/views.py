@@ -1,6 +1,7 @@
-from django.http import HttpRequest
+from django.http import HttpRequest, JsonResponse
 from django.utils.translation import gettext as _
 from django.utils.translation import pgettext
+from django.views import View
 
 from django.views.generic import ListView, DetailView, TemplateView
 
@@ -84,3 +85,35 @@ class ContactCreateView(ContextMixin, TemplateView):
         if form.is_valid():
             form.save()
         return self.get(request=request)
+
+
+class PostApiView(View):
+
+    def get(self, request: HttpRequest, post_id=None):
+        if not post_id:
+            posts = Post.objects.all().filter(is_published=True)
+            data = {}
+            for post in posts:
+                data[str(post.id)] = {
+                    'title': post.title,
+                    'subtitle': post.subtitle,
+                    'text': post.text,
+                    'image': post.image.url,
+                    'author': post.author.username
+                }
+            return JsonResponse(data=data)
+        else:
+            post = Post.objects.filter(pk=int(post_id))
+            if post:
+                post = post[0]
+                post = {
+                    'id': post.id,
+                    'title': post.title,
+                    'subtitle': post.subtitle,
+                    'text': post.text,
+                    'image': post.image.url,
+                    'author': post.author.username
+                }
+                return JsonResponse(data=post)
+            else:
+                return JsonResponse(data={'status': 404, 'detail': f'post {post_id} does not exist'}, status=404)
