@@ -1,3 +1,11 @@
 from django.shortcuts import render
+from rest_framework.viewsets import ModelViewSet
 
-# Create your views here.
+from blog.models import Post
+from .serializers import PostSerializer
+
+class PostViewSet(ModelViewSet):
+    queryset = Post.objects.filter(is_published=True)
+    serializer_class = PostSerializer
+
+
